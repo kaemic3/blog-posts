@@ -1,0 +1,98 @@
+---
+title: 'Struture Packing from Handmade Hero
+date: '2024-01-30'
+tags: ['test']
+---
+These are notes I took watching handmade hero one time. Just for testing :3
+
+# Good
+This code is nice for the caller, as the amount of things that need to be passed into the DrawLine function has been reduced to 2 Params. Though we still need to pack the data into a struct, it can be used easier than if the data was not packed together.
+
+This also has a side effect of being logical, since in math we traditionally pack X and Y together as "points".
+
+```C
+typedef struct point 
+{
+	float X;
+	float Y;
+} point;
+void 
+DrawLine(float X1, float Y1, float X2, float Y2) {
+	// Does things to draw the line...
+}
+void
+PointDrawLine(point P0, point p1) {
+	DrawLine(P0.X, P0.Y, P1.X, P1.Y);
+}
+int 
+main() {
+	DrawLine(3.0f, 3.5f, 10.5f, 10.0f);
+	// This can be compressed down to the following:
+	point P0 = {3.0f, 3.5f};
+	point p1 = {10.5f, 10.0f};
+	PointDrawLine(P0, P1);
+	point P[] = {...};
+	for(int PIndex = 0; PIndex < (ArrayCount(P) - 1));
+		++PIndex)
+	{
+		PointDrawLine(P[PIndex, P[PIndex + 1]);
+	//  VS
+	    DrawLine(P[PIndex].X, P[PIndex]. Y, 
+	             P[PIndex + 1].X, P[PIndex + 1]. Y);
+	}
+	return 0;
+}
+```
+# Bad
+This approach creates a lot more work for the caller, for no real benefit. We constantly have to pack a bunch of values each time we want to draw a line. It is effectively the same as if we did not pack anything at all since we have to keep assigning the members even in our loop!
+
+```C
+typedef struct line 
+{
+	float X1;
+	float Y1;
+	float X2;
+	float Y2;
+} line;
+void 
+DrawLine(float X1, float Y1, float X2, float Y2) {
+	// Does things to draw the line...
+}
+void
+LineDrawLine(line Line) {
+	DrawLine(Line.X1, Line.Y1, Line.X2, Line.Y2);
+}
+
+int
+main() {
+	DrawLine(3.0f, 3.5f, 10.5f, 10.0f);
+	line Line = {3.0f, 3.5f, 10.5f, 10.0f};
+	LineDrawLine(Line);
+	line L[] = {...};
+	for(int LIndex = 0; LIndex < (ArrayCount(L) - 1));
+		++LIndex)
+	{
+		line PLine;
+		PLine.X1 = L[LIndex].X1;
+		PLine.Y1 = L[LIndex].X1;
+		PLine.X2 = L[LIndex].X2;
+		PLine.Y2 = L[LIndex].Y2;
+		LineDrawLine(PLine);
+	//  VS
+		DrawLine(P[PIndex].X, P[PIndex]. Y, 
+				 P[PIndex + 1].X, P[PIndex + 1]. Y);
+	}
+	return 0;
+}
+```
+
+This can be saved by creating some sort of constructing function, but it will end up looking like the "Good" version above!
+```C
+line MakeLine(point P0, point P1) {
+	line Return;
+	Return.X1 = P0.X;
+	Return.Y1 = P0.Y;
+	Return.X2 = P1.X;
+	Return.X2 = P1.Y;
+	return Return;	
+}
